@@ -735,6 +735,7 @@ function retryGame(){ startGame(); }
 //  LOAD QUESTION
 // ============================================================
 function loadQuestion(){
+  window.scrollTo({top:0, behavior:"smooth"});
   state.answered=false;
   if(state.currentQ>0 && state.currentQ%state.pool.length===0) state.pool=shuffle(state.pool);
   state.current=state.pool[state.currentQ%state.pool.length];
