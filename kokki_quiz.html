@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>🌍 せかい国旗クイズ</title>
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+  <style>
+    :root {
+      --primary: #FF6B35;
+      --primary-light: #FF8C5A;
+      --secondary: #4ECDC4;
+      --accent: #FFE66D;
+      --bg: #FFF9F0;
+      --text: #2C3E50;
+      --text-light: #7F8C8D;
+      --correct: #2ECC71;
+      --wrong: #E74C3C;
+      --shadow: 0 4px 16px rgba(0,0,0,0.10);
+      --radius: 18px;
+      --flag-shadow: 2px 4px 12px rgba(0,0,0,0.28);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Hiragino Maru Gothic ProN', 'BIZ UDPGothic', 'Kosugi Maru', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    /* PC: body にグラデ背景、app をカード表示 */
+    @media (min-width: 520px) {
+      body {
+        background: linear-gradient(145deg, #FFE8D6 0%, #FFF5CC 50%, #E0F5F4 100%);
+        padding: 28px 16px 40px;
+        align-items: flex-start;
+      }
+    }
+
+    #app {
+      width: 100%;
+      max-width: 520px;
+      min-height: 100vh;
+      background: var(--bg);
+      position: relative;
+    }
+
+    @media (min-width: 520px) {
+      #app {
+        min-height: auto;
+        border-radius: 28px;
+        box-shadow: 0 12px 56px rgba(0,0,0,0.18);
+        overflow: hidden;
+      }
+    }
+
+    .screen { display: none; padding: 20px 16px 32px; }
+    .screen.active { display: block; }
+
+    /* ===== HOME ===== */
+    .home-title {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 0 14px;
+    }
+    .globe { font-size: 44px; animation: spinSlow 10s linear infinite; display: inline-block; flex-shrink: 0; }
+    @keyframes spinSlow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .home-title h1 { font-size: 26px; font-weight: 900; color: var(--primary); line-height: 1.1; }
+    .home-title p { font-size: 12px; color: var(--text-light); margin-top: 3px; }
+
+    .section { margin-bottom: 16px; }
+    .section-label {
+      font-size: 11px; font-weight: 800; color: var(--text-light);
+      letter-spacing: 1.2px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .section-label i { font-size: 15px; }
+
+    /* ボタン内アイコン */
+    .btn-icon { font-size: 22px; display: block; margin-bottom: 3px; }
+    .btn-select .btn-icon { color: var(--primary); }
+    .btn-select.active .btn-icon { color: white; }
+    .btn-select.active[data-val="survival"] .btn-icon { color: white; }
+
+    .btn-group { display: flex; gap: 8px; }
+    .btn-select {
+      flex: 1; padding: 11px 6px; border: 2.5px solid #E8E8E8; border-radius: var(--radius);
+      background: white; cursor: pointer; font-size: 13px; font-family: inherit;
+      font-weight: 700; color: var(--text); transition: all 0.18s; text-align: center; line-height: 1.3;
+    }
+    .btn-select:active { transform: scale(0.97); }
+    .btn-select .sub { font-size: 10px; opacity: 0.75; font-weight: 400; display: block; margin-top: 2px; }
+    .btn-select.active {
+      border-color: var(--primary); background: var(--primary); color: white;
+      box-shadow: 0 3px 10px rgba(255,107,53,0.38);
+    }
+    /* サバイバルボタンはアクセント色 */
+    .btn-select.active[data-val="survival"] {
+      background: #E74C3C; border-color: #E74C3C;
+      box-shadow: 0 3px 10px rgba(231,76,60,0.38);
+    }
+
+    .btn-start {
+      width: 100%; padding: 17px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border: none; border-radius: var(--radius); color: white;
+      font-size: 20px; font-weight: 900; font-family: inherit; cursor: pointer;
+      box-shadow: 0 5px 18px rgba(255,107,53,0.40); transition: all 0.18s; margin-top: 6px;
+    }
+    .btn-start:active { transform: scale(0.98); }
+
+    .btn-collection {
+      width: 100%; padding: 13px; background: white;
+      border: 2.5px solid var(--secondary); border-radius: var(--radius);
+      color: var(--secondary); font-size: 15px; font-weight: 700;
+      font-family: inherit; cursor: pointer; margin-top: 10px; transition: all 0.18s;
+    }
+    .btn-collection:active { background: var(--secondary); color: white; }
+
+    /* ===== RANKING HOME WIDGET ===== */
+    .ranking-widget {
+      margin-top: 14px; background: white; border-radius: var(--radius);
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    .ranking-widget-header {
+      background: linear-gradient(135deg, #E74C3C, #FF6B6B);
+      padding: 10px 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .ranking-widget-header h3 { color: white; font-size: 14px; font-weight: 900; }
+    .ranking-widget-header span { color: rgba(255,255,255,0.85); font-size: 11px; }
+    .ranking-list { padding: 8px 0; }
+    .ranking-row {
+      display: flex; align-items: center; gap: 10px; padding: 8px 14px;
+      border-bottom: 1px solid #F5F5F5; font-size: 13px;
+    }
+    .ranking-row:last-child { border-bottom: none; }
+    .ranking-pos { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
+    .ranking-name { font-weight: 700; flex: 1; }
+    .ranking-score { font-weight: 900; color: var(--primary); font-size: 15px; }
+    .ranking-date { font-size: 10px; color: var(--text-light); }
+    .ranking-diff { font-size: 10px; color: white; font-weight: 700; padding: 2px 7px; border-radius: 20px; margin-left: 4px; }
+    .ranking-diff.easy   { background: #27AE60; }
+    .ranking-diff.normal { background: #E67E22; }
+    .ranking-diff.hard   { background: #E74C3C; }
+    .ranking-empty { text-align: center; padding: 16px; color: var(--text-light); font-size: 13px; }
+
+    /* ===== QUIZ HEADER ===== */
+    .quiz-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 14px 16px 10px; position: sticky; top: 0;
+      background: var(--bg); z-index: 10;
+    }
+    .btn-back {
+      background: white; border: 2px solid #E8E8E8; border-radius: 50px;
+      padding: 7px 13px; font-size: 13px; font-family: inherit;
+      cursor: pointer; color: var(--text-light); white-space: nowrap; min-height: 36px;
+    }
+    .btn-back:active { border-color: var(--primary); color: var(--primary); }
+
+    .progress-wrap { flex: 1; }
+    .progress-bar { height: 8px; background: #E8E8E8; border-radius: 10px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 10px; transition: width 0.4s ease;
+    }
+    .progress-text { font-size: 11px; color: var(--text-light); text-align: center; margin-top: 3px; }
+
+    /* サバイバルのライフ表示 */
+    .lives-wrap { flex: 1; text-align: center; }
+    .lives-display { font-size: 22px; letter-spacing: 4px; }
+    .lives-label { font-size: 10px; color: var(--text-light); margin-top: 2px; }
+
+    .score-badge {
+      background: var(--accent); border-radius: 50px; padding: 5px 12px;
+      font-size: 14px; font-weight: 800; white-space: nowrap; min-height: 36px;
+      display: flex; align-items: center;
+    }
+    /* サバイバルスコアはレッド系 */
+    .score-badge.survival-badge { background: #FDEDEC; color: var(--wrong); }
+
+    /* ===== QUIZ CARD ===== */
+    .quiz-card {
+      background: white; border-radius: var(--radius); padding: 22px 16px;
+      box-shadow: var(--shadow); text-align: center; margin: 0 0 14px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 220px; transition: background 0.2s;
+    }
+    .quiz-card.shake { animation: shake 0.38s ease; }
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 20%{transform:translateX(-9px)}
+      40%{transform:translateX(9px)} 60%{transform:translateX(-7px)} 80%{transform:translateX(7px)}
+    }
+    .quiz-card.bounce { animation: bounce 0.35s ease; }
+    @keyframes bounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+
+    .quiz-label {
+      font-size: 13px; color: var(--text-light); font-weight: 700;
+      margin-bottom: 18px; background: var(--bg); padding: 5px 14px; border-radius: 50px;
+    }
+    .flag-img { max-width: min(260px, 82%); height: auto; display: block; border-radius: 8px; box-shadow: var(--flag-shadow); }
+    .country-name-display { font-size: 34px; font-weight: 900; line-height: 1.2; }
+    .country-kana { font-size: 15px; color: var(--text-light); margin-top: 4px; }
+
+    /* ===== CHOICES ===== */
+    .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .choice-btn {
+      background: white; border: 2.5px solid #E8E8E8; border-radius: var(--radius);
+      padding: 12px 8px; cursor: pointer; font-family: inherit; font-size: 14px;
+      font-weight: 700; color: var(--text); transition: border-color 0.15s;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      min-height: 80px; justify-content: center;
+    }
+    .choice-btn:active:not(:disabled) { transform: scale(0.97); }
+    .choice-btn:disabled { cursor: default; }
+    .choice-btn.correct-highlight { border-color: var(--correct); background: #EAFAF1; color: #27AE60; }
+    .choice-btn.wrong { border-color: var(--wrong); background: #FDEDEC; color: #C0392B; }
+    .choice-flag-wrap { width: 100%; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+    .choice-flag { max-width: 110px; width: 100%; height: auto; border-radius: 5px; box-shadow: var(--flag-shadow); display: block; }
+    .choice-text { font-size: 13px; text-align: center; line-height: 1.3; }
+
+    /* ===== RESULT PANEL ===== */
+    .result-panel {
+      background: white; border-radius: var(--radius); padding: 18px 16px;
+      box-shadow: var(--shadow); margin-top: 10px; animation: slideUp 0.35s ease;
+    }
+    @keyframes slideUp { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .result-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+    .result-flag { max-width: 80px; width: 80px; height: auto; border-radius: 7px; box-shadow: var(--flag-shadow); flex-shrink: 0; }
+    .result-verdict { font-size: 17px; font-weight: 900; margin-bottom: 2px; }
+    .result-verdict.correct-v { color: var(--correct); }
+    .result-verdict.wrong-v { color: var(--wrong); }
+    .result-country-name { font-size: 21px; font-weight: 900; line-height: 1.2; }
+    .result-country-kana { font-size: 12px; color: var(--text-light); margin-top: 1px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .info-item { background: var(--bg); border-radius: 10px; padding: 9px 10px; }
+    .info-label { font-size: 10px; color: var(--text-light); font-weight: 700; margin-bottom: 2px; }
+    .info-val { font-size: 13px; font-weight: 700; }
+    .info-fact { background: linear-gradient(135deg, #FFF9E6, #FFF0CC); border-radius: 10px; padding: 11px 13px; font-size: 13px; line-height: 1.65; border-left: 4px solid var(--accent); }
+    .fact-label { font-size: 10px; font-weight: 800; color: #B7950B; margin-bottom: 4px; }
+    .btn-next {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, var(--secondary), #3DBDB4);
+      border: none; border-radius: var(--radius); color: white;
+      font-size: 17px; font-weight: 900; font-family: inherit; cursor: pointer;
+      margin-top: 13px; box-shadow: 0 4px 12px rgba(78,205,196,0.38);
+    }
+    .btn-next:active { transform: scale(0.98); }
+
+    /* ===== FINAL SCORE ===== */
+    .score-screen { text-align: center; padding-top: 16px; }
+    .score-rank { font-size: 52px; margin-bottom: 4px; }
+    .score-rank-label { font-size: 20px; font-weight: 900; margin-bottom: 10px; }
+    .score-big {
+      font-size: 80px; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .score-sub { font-size: 18px; color: var(--text-light); margin: 6px 0 20px; }
+    .score-breakdown { background: white; border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 18px; text-align: left; }
+    .breakdown-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #F0F0F0; font-size: 14px; }
+    .breakdown-row:last-child { border-bottom: none; }
+    .breakdown-row.c { color: var(--correct); font-weight: 700; }
+    .breakdown-row.w { color: var(--wrong); font-weight: 700; }
+
+    /* ===== SURVIVAL GAMEOVER ===== */
+    .gameover-screen { text-align: center; }
+    .gameover-title { font-size: 48px; margin-bottom: 8px; }
+    .gameover-label { font-size: 24px; font-weight: 900; color: var(--wrong); margin-bottom: 4px; }
+    .gameover-sub { font-size: 14px; color: var(--text-light); margin-bottom: 20px; }
+    .big-score {
+      font-size: 72px; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, #E74C3C, var(--primary));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .big-score-label { font-size: 16px; color: var(--text-light); margin: 4px 0 20px; }
+
+    /* TOP5入りバナー */
+    .top5-banner {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px;
+      text-align: center;
+    }
+    .top5-banner h3 { font-size: 18px; font-weight: 900; color: white; margin-bottom: 8px; }
+    .name-input-wrap { display: flex; gap: 8px; }
+    .name-input {
+      flex: 1; padding: 10px 14px; border: 2px solid rgba(255,255,255,0.7);
+      border-radius: 12px; font-size: 16px; font-family: inherit; font-weight: 700;
+      background: rgba(255,255,255,0.9); color: var(--text); outline: none;
+    }
+    .name-input:focus { border-color: white; background: white; }
+    .btn-register {
+      padding: 10px 16px; background: white; border: none; border-radius: 12px;
+      font-size: 14px; font-weight: 900; font-family: inherit; color: #E67E22; cursor: pointer;
+      white-space: nowrap;
+    }
+
+    /* サバイバルランキング（スコア画面内） */
+    .survival-ranking { background: white; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+    .survival-ranking-header { background: linear-gradient(135deg, #E74C3C, #FF6B6B); padding: 10px 14px; }
+    .survival-ranking-header h3 { color: white; font-size: 14px; font-weight: 900; }
+
+    .btn-retry {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, #E74C3C, #FF6B6B);
+      border: none; border-radius: var(--radius); color: white;
+      font-size: 18px; font-weight: 900; font-family: inherit; cursor: pointer;
+      box-shadow: 0 4px 13px rgba(231,76,60,0.38); margin-bottom: 10px;
+    }
+    .btn-retry-normal {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border: none; border-radius: var(--radius); color: white;
+      font-size: 18px; font-weight: 900; font-family: inherit; cursor: pointer;
+      box-shadow: 0 4px 13px rgba(255,107,53,0.38); margin-bottom: 10px;
+    }
+    .btn-home {
+      width: 100%; padding: 13px; background: white; border: 2.5px solid #E8E8E8;
+      border-radius: var(--radius); color: var(--text); font-size: 15px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+    }
+
+    /* ===== COLLECTION ===== */
+    .coll-header { text-align: center; margin-bottom: 20px; padding-top: 8px; }
+    .coll-header h2 { font-size: 26px; font-weight: 900; }
+    .coll-header p { color: var(--text-light); font-size: 13px; margin-top: 5px; line-height: 1.5; }
+    .region-card { background: white; border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); margin-bottom: 12px; }
+    .region-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .region-title { font-size: 16px; font-weight: 900; }
+    .region-prog-text { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+    .region-badge { font-size: 28px; filter: grayscale(1) opacity(0.25); transition: filter 0.4s; }
+    .region-badge.earned { filter: none; }
+    .region-bar { height: 7px; background: #E8E8E8; border-radius: 8px; overflow: hidden; }
+    .region-bar-fill { height: 100%; border-radius: 8px; transition: width 0.6s ease; }
+    .badge-section-label { font-size: 11px; font-weight: 800; color: var(--text-light); letter-spacing: 1.2px; margin: 18px 0 10px; }
+    .badge-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .badge-item { background: var(--bg); border-radius: 14px; padding: 13px 6px; text-align: center; border: 2px solid transparent; }
+    .badge-item.earned { background: white; border-color: var(--accent); box-shadow: 0 2px 8px rgba(255,230,109,0.4); }
+    .badge-icon { font-size: 32px; filter: grayscale(1) opacity(0.25); }
+    .badge-item.earned .badge-icon { filter: none; }
+    .badge-name { font-size: 11px; font-weight: 700; margin-top: 5px; color: var(--text-light); }
+    .badge-item.earned .badge-name { color: var(--text); }
+
+    /* ===== LOADING ===== */
+    .loading-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 16px; }
+    .loading-spinner { font-size: 48px; animation: spinSlow 2s linear infinite; }
+    .loading-wrap p { font-size: 16px; color: var(--text-light); font-weight: 700; }
+
+    /* ===== CONFETTI / FEEDBACK ===== */
+    .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+    .confetti-piece { position: absolute; top: -20px; width: 9px; height: 9px; border-radius: 2px; animation: cFall linear forwards; }
+    @keyframes cFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+    .feedback-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 1000; }
+    .feedback-text { font-size: 72px; animation: fPop 0.6s ease forwards; opacity: 0; }
+    @keyframes fPop { 0%{transform:scale(0.3);opacity:0} 50%{transform:scale(1.15);opacity:1} 80%{opacity:1} 100%{transform:scale(1);opacity:0} }
+  </style>
+</head>
+<body>
+<div id="app">
+
+<!-- LOADING -->
+<div id="screen-loading" class="screen active">
+  <div class="loading-wrap">
+    <div class="loading-spinner">🌍</div>
+    <p>データを読み込み中…</p>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="screen-home" class="screen">
+  <div class="home-title">
+    <span class="globe">🌍</span>
+    <div>
+      <h1>せかい国旗クイズ</h1>
+      <p>世界の国旗をおぼえよう！</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label"><i class="ph-fill ph-game-controller" style="color:#FF6B35"></i> クイズのモード</div>
+    <div class="btn-group">
+      <button class="btn-select active" data-group="mode" data-val="flag-to-name">
+        <i class="ph-fill ph-flag btn-icon"></i>
+        国旗 → 国名<span class="sub">国旗を見て国名を選ぼう</span>
+      </button>
+      <button class="btn-select" data-group="mode" data-val="name-to-flag">
+        <i class="ph-fill ph-text-aa btn-icon"></i>
+        国名 → 国旗<span class="sub">国名を見て国旗を選ぼう</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label"><i class="ph-fill ph-star" style="color:#F1C40F"></i> むずかしさ</div>
+    <div class="btn-group">
+      <button class="btn-select" data-group="difficulty" data-val="easy">
+        <i class="ph-fill ph-smiley btn-icon"></i>
+        かんたん<span class="sub">主な国・ひらがな</span>
+      </button>
+      <button class="btn-select active" data-group="difficulty" data-val="normal">
+        <i class="ph-fill ph-star btn-icon"></i>
+        ふつう<span class="sub">主要な国</span>
+      </button>
+      <button class="btn-select" data-group="difficulty" data-val="hard">
+        <i class="ph-fill ph-fire btn-icon"></i>
+        むずかしい<span class="sub">約190カ国！</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label"><i class="ph-fill ph-joystick" style="color:#4ECDC4"></i> ゲームのスタイル</div>
+    <div class="btn-group">
+      <button class="btn-select active" data-group="gametype" data-val="challenge">
+        <i class="ph-fill ph-list-numbers btn-icon"></i>
+        10問モード<span class="sub">スコアを競おう</span>
+      </button>
+      <button class="btn-select" data-group="gametype" data-val="unlimited">
+        <i class="ph-fill ph-infinity btn-icon"></i>
+        無限モード<span class="sub">好きなだけ続けよう</span>
+      </button>
+      <button class="btn-select" data-group="gametype" data-val="survival">
+        <i class="ph-fill ph-heart btn-icon"></i>
+        サバイバル<span class="sub">3ミスで終了！</span>
+      </button>
+    </div>
+  </div>
+
+  <button class="btn-start" onclick="startGame()"><i class="ph-fill ph-play-circle"></i> スタート！</button>
+  <button class="btn-collection" onclick="showCollection()"><i class="ph-fill ph-medal"></i> コレクション・バッジを見る</button>
+
+  <!-- サバイバルランキング -->
+  <div class="ranking-widget">
+    <div class="ranking-widget-header">
+      <h3><i class="ph-fill ph-trophy"></i> サバイバル ランキング TOP5</h3>
+    </div>
+    <div class="ranking-list" id="home-ranking-list">
+      <div class="ranking-empty">まだ記録がありません</div>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-header">
+    <button class="btn-back" onclick="goHome()"><i class="ph-bold ph-arrow-left"></i> もどる</button>
+    <!-- 通常モード: プログレス -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-text" id="progress-text">1 / 10</div>
+    </div>
+    <!-- サバイバルモード: ライフ -->
+    <div class="lives-wrap" id="lives-wrap" style="display:none">
+      <div class="lives-display" id="lives-display">❤️❤️❤️</div>
+      <div class="lives-label">のこりライフ</div>
+    </div>
+    <div class="score-badge" id="score-badge">⭐ <span id="score-display">0</span></div>
+  </div>
+
+  <div style="padding: 0 0 16px;">
+    <div class="quiz-card" id="quiz-card">
+      <div class="quiz-label" id="quiz-label">この国旗はどの国？</div>
+      <img class="flag-img" id="quiz-flag" src="" alt="国旗" style="display:none">
+      <div id="quiz-country-name" style="display:none">
+        <div class="country-name-display" id="quiz-name-text"></div>
+        <div class="country-kana" id="quiz-kana-text"></div>
+      </div>
+    </div>
+    <div class="choices-grid" id="choices-grid"></div>
+    <div id="result-panel" class="result-panel" style="display:none">
+      <div class="result-header">
+        <img class="result-flag" id="result-flag" src="" alt="">
+        <div>
+          <div class="result-verdict" id="result-verdict"></div>
+          <div class="result-country-name" id="result-country-name"></div>
+          <div class="result-country-kana" id="result-country-kana"></div>
+        </div>
+      </div>
+      <div class="info-grid" id="info-grid"></div>
+      <div class="info-fact" id="info-fact"></div>
+      <button class="btn-next" id="btn-next" onclick="nextQuestion()">つぎへ →</button>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL SCORE (10問/無限) -->
+<div id="screen-score" class="screen">
+  <div class="score-screen">
+    <div class="score-rank" id="score-rank-emoji"></div>
+    <div class="score-rank-label" id="score-rank-label"></div>
+    <div class="score-big" id="score-big"></div>
+    <div class="score-sub" id="score-sub"></div>
+    <div class="score-breakdown" id="score-breakdown"></div>
+    <button class="btn-retry-normal" onclick="retryGame()">🔄 もう一度チャレンジ！</button>
+    <button class="btn-home" onclick="goHome()">🏠 ホームに戻る</button>
+  </div>
+</div>
+
+<!-- SURVIVAL GAME OVER -->
+<div id="screen-survival" class="screen">
+  <div class="gameover-screen">
+    <div class="gameover-title">💔</div>
+    <div class="gameover-label">ゲームオーバー！</div>
+    <div class="gameover-sub" id="survival-miss-text">3回まちがえてしまいました</div>
+    <div class="big-score" id="survival-score-big">0</div>
+    <div class="big-score-label">問 正解！</div>
+
+    <!-- TOP5入り時のみ表示 -->
+    <div class="top5-banner" id="top5-banner" style="display:none">
+      <h3>🏆 TOP5入り！名前を登録しよう</h3>
+      <div class="name-input-wrap">
+        <input class="name-input" id="name-input" type="text" maxlength="10" placeholder="なまえ（最大10文字）">
+        <button class="btn-register" onclick="registerName()">登録！</button>
+      </div>
+    </div>
+
+    <!-- ランキング -->
+    <div class="survival-ranking" id="survival-ranking-card">
+      <div class="survival-ranking-header"><h3>❤️ サバイバルランキング TOP5</h3></div>
+      <div class="ranking-list" id="survival-ranking-list"></div>
+    </div>
+
+    <button class="btn-retry" onclick="retryGame()">🔄 もう一度サバイバル！</button>
+    <button class="btn-home" onclick="goHome()">🏠 ホームに戻る</button>
+  </div>
+</div>
+
+<!-- COLLECTION -->
+<div id="screen-collection" class="screen">
+  <div class="coll-header">
+    <h2>🏅 コレクション</h2>
+    <p>地域ごとに全部正解するとバッジがもらえるよ！<br>（全190カ国が対象）</p>
+  </div>
+  <div id="region-cards"></div>
+  <div class="badge-section-label">🌟 特別バッジ</div>
+  <div class="badge-grid" id="special-badges"></div>
+  <button class="btn-home" style="margin-top:22px;" onclick="goHome()">← ホームに戻る</button>
+</div>
+
+</div><!-- #app -->
+<div class="confetti-container" id="confetti-container"></div>
+<div class="feedback-overlay" id="feedback-overlay"></div>
+
+<script>
+// ============================================================
+//  CONSTANTS
+// ============================================================
+const REGIONS = {
+  asia:     { label:"アジア",       emoji:"🌏", bar:"#FF8C5A" },
+  mideast:  { label:"中東",         emoji:"🌙", bar:"#9B59B6" },
+  europe:   { label:"ヨーロッパ",   emoji:"🏰", bar:"#3498DB" },
+  americas: { label:"アメリカ大陸", emoji:"🗽", bar:"#E74C3C" },
+  africa:   { label:"アフリカ",     emoji:"🦁", bar:"#E67E22" },
+  oceania:  { label:"オセアニア",   emoji:"🦘", bar:"#27AE60" },
+};
+const SPECIAL_BADGES = [
+  { id:"first_quiz",  icon:"🎯", label:"はじめて！",   cond:p=>p.first_quiz },
+  { id:"perfect10",   icon:"🏆", label:"全問正解！",   cond:p=>p.perfect10 },
+  { id:"streak5",     icon:"🔥", label:"5連続正解",   cond:p=>p.streakMax>=5 },
+  { id:"streak10",    icon:"⚡", label:"10連続正解",  cond:p=>p.streakMax>=10 },
+  { id:"c50",         icon:"🌍", label:"50カ国！",     cond:p=>(p.answeredRight||[]).length>=50 },
+  { id:"c100",        icon:"🌐", label:"100カ国！",    cond:p=>(p.answeredRight||[]).length>=100 },
+  { id:"all_regions", icon:"✨", label:"全大陸制覇！", cond:p=>p.allRegions },
+];
+const MAX_LIVES = 3;
+
+// ============================================================
+//  STATE
+// ============================================================
+let COUNTRIES = [];
+const state = {
+  mode: "flag-to-name",
+  difficulty: "normal",
+  gametype: "challenge",
+  currentQ: 0,
+  totalQ: 10,
+  score: 0,
+  streak: 0,
+  lives: MAX_LIVES,
+  misses: 0,
+  pool: [],
+  current: null,
+  choices: [],
+  answered: false,
+  pendingSurvivalScore: null,  // TOP5入り時に一時保存
+};
+
+function loadProgress() { try { return JSON.parse(localStorage.getItem("kokki_v2")||"{}"); } catch { return {}; } }
+function saveProgress(p) { localStorage.setItem("kokki_v2", JSON.stringify(p)); }
+let progress = loadProgress();
+if (!progress.answeredRight) progress.answeredRight = [];
+if (!progress.streakMax) progress.streakMax = 0;
+
+function loadRanking() { try { return JSON.parse(localStorage.getItem("kokki_ranking")||"[]"); } catch { return []; } }
+function saveRanking(r) { localStorage.setItem("kokki_ranking", JSON.stringify(r)); }
+
+// ============================================================
+//  AUDIO
+// ============================================================
+let audioCtx = null;
+function getCtx() { if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
+function tone(f,d,type="sine",g=0.28) {
+  try {
+    const ctx=getCtx(), o=ctx.createOscillator(), gn=ctx.createGain();
+    o.connect(gn); gn.connect(ctx.destination);
+    o.type=type; o.frequency.value=f;
+    gn.gain.setValueAtTime(g,ctx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+d);
+    o.start(); o.stop(ctx.currentTime+d);
+  } catch(e){}
+}
+function playCorrect() { tone(523,.14); setTimeout(()=>tone(659,.14),110); setTimeout(()=>tone(784,.22),220); }
+function playWrong()   { tone(280,.10); setTimeout(()=>tone(220,.20),110); }
+function playFanfare() { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.18,"square",.18),i*90)); }
+function playGameOver(){ tone(400,.15); setTimeout(()=>tone(330,.15),150); setTimeout(()=>tone(260,.4),300); }
+
+// ============================================================
+//  CONFETTI / FEEDBACK
+// ============================================================
+function fireConfetti() {
+  const c=document.getElementById("confetti-container");
+  const cols=["#FF6B35","#FFE66D","#4ECDC4","#A8E063","#FF6B9D","#7B61FF"];
+  for(let i=0;i<55;i++){
+    const el=document.createElement("div");
+    el.className="confetti-piece";
+    el.style.cssText=`left:${Math.random()*100}%;background:${cols[Math.floor(Math.random()*cols.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?"50%":"2px"};animation-duration:${.8+Math.random()*1.2}s;animation-delay:${Math.random()*.4}s`;
+    c.appendChild(el);
+    setTimeout(()=>el.remove(),2500);
+  }
+}
+function showFeedback(e) {
+  const ov=document.getElementById("feedback-overlay");
+  ov.innerHTML=`<div class="feedback-text">${e}</div>`;
+  setTimeout(()=>ov.innerHTML="",650);
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo(0,0);
+}
+function goHome() { renderHomeRanking(); showScreen("screen-home"); }
+
+// ============================================================
+//  HOME BTN GROUP
+// ============================================================
+document.querySelectorAll(".btn-select").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const g=btn.dataset.group;
+    document.querySelectorAll(`[data-group="${g}"]`).forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    state[g]=btn.dataset.val;
+  });
+});
+
+// ============================================================
+//  RANKING
+// ============================================================
+const RANK_MEDALS = ["🥇","🥈","🥉","4️⃣","5️⃣"];
+const DIFF_LABEL = { easy:"かんたん", normal:"ふつう", hard:"むずかしい" };
+
+function renderRankingList(containerId, ranking) {
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  if(!ranking.length){ el.innerHTML='<div class="ranking-empty">まだ記録がありません</div>'; return; }
+  el.innerHTML=ranking.slice(0,5).map((r,i)=>`
+    <div class="ranking-row">
+      <span class="ranking-pos">${RANK_MEDALS[i]}</span>
+      <span class="ranking-name">${escHtml(r.name)}</span>
+      <span class="ranking-score">${r.score}問</span>
+      <span class="ranking-diff ${r.diff||'normal'}">${DIFF_LABEL[r.diff]||'ふつう'}</span>
+      <span class="ranking-date">${r.date}</span>
+    </div>`).join("");
+}
+function renderHomeRanking() { renderRankingList("home-ranking-list", loadRanking()); }
+function escHtml(s){ return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function isTop5(score) {
+  const r=loadRanking();
+  return r.length<5 || score>r[r.length-1].score;
+}
+function addRanking(name, score) {
+  let r=loadRanking();
+  const today=new Date();
+  const date=`${today.getFullYear()}/${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
+  r.push({name, score, date, diff: state.difficulty});
+  r.sort((a,b)=>b.score-a.score);
+  r=r.slice(0,5);
+  saveRanking(r);
+  return r;
+}
+
+function registerName() {
+  const input=document.getElementById("name-input");
+  const name=(input.value.trim()||"ななし").slice(0,10);
+  addRanking(name, state.pendingSurvivalScore);
+  state.pendingSurvivalScore=null;
+  document.getElementById("top5-banner").style.display="none";
+  renderRankingList("survival-ranking-list", loadRanking());
+}
+
+// ============================================================
+//  GAME SETUP
+// ============================================================
+function shuffle(a){ let arr=[...a]; for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+function getPool(){ const map={easy:1,normal:2,hard:3}; return COUNTRIES.filter(c=>c.diff<=map[state.difficulty]); }
+
+function startGame(){
+  state.pool=shuffle(getPool());
+  state.currentQ=0; state.score=0; state.streak=0;
+  state.lives=MAX_LIVES; state.misses=0; state.pendingSurvivalScore=null;
+  state.totalQ=state.gametype==="challenge"?10:Infinity;
+
+  // ヘッダー切り替え
+  const isSurvival=state.gametype==="survival";
+  document.getElementById("progress-wrap").style.display=isSurvival?"none":"";
+  document.getElementById("lives-wrap").style.display=isSurvival?"":"none";
+  const badge=document.getElementById("score-badge");
+  badge.className="score-badge"+(isSurvival?" survival-badge":"");
+  badge.innerHTML=isSurvival?`<i class="ph-fill ph-skull"></i> <span id="score-display">0</span>`:`<i class="ph-fill ph-star"></i> <span id="score-display">0</span>`;
+
+  showScreen("screen-quiz");
+  loadQuestion();
+}
+function retryGame(){ startGame(); }
+
+// ============================================================
+//  LOAD QUESTION
+// ============================================================
+function loadQuestion(){
+  state.answered=false;
+  if(state.currentQ>0 && state.currentQ%state.pool.length===0) state.pool=shuffle(state.pool);
+  state.current=state.pool[state.currentQ%state.pool.length];
+
+  const wrong=shuffle(getPool().filter(c=>c.code!==state.current.code)).slice(0,3);
+  state.choices=shuffle([state.current,...wrong]);
+
+  // progress bar
+  if(state.gametype==="challenge"){
+    document.getElementById("progress-fill").style.width=(state.currentQ/state.totalQ*100)+"%";
+    document.getElementById("progress-text").textContent=`${state.currentQ+1} / ${state.totalQ}`;
+  }
+  // lives
+  if(state.gametype==="survival"){
+    updateLivesDisplay();
+  }
+  document.getElementById("score-display").textContent=state.score;
+
+  const card=document.getElementById("quiz-card");
+  card.style.background=""; card.classList.remove("shake","bounce");
+  const isEasy=state.difficulty==="easy";
+
+  if(state.mode==="flag-to-name"){
+    document.getElementById("quiz-label").textContent="この国旗はどの国？";
+    const img=document.getElementById("quiz-flag");
+    img.src=`https://flagcdn.com/w320/${state.current.code}.png`;
+    img.style.display="";
+    document.getElementById("quiz-country-name").style.display="none";
+  } else {
+    document.getElementById("quiz-label").textContent="この国の国旗はどれ？";
+    document.getElementById("quiz-flag").style.display="none";
+    document.getElementById("quiz-country-name").style.display="";
+    document.getElementById("quiz-name-text").textContent=isEasy?state.current.kana:state.current.name;
+    document.getElementById("quiz-kana-text").textContent=isEasy?"":state.current.kana;
+  }
+
+  const grid=document.getElementById("choices-grid");
+  grid.innerHTML="";
+  state.choices.forEach((c)=>{
+    const btn=document.createElement("button");
+    btn.className="choice-btn";
+    if(state.mode==="flag-to-name"){
+      btn.innerHTML=`<span class="choice-text">${isEasy?c.kana:c.name}</span>`;
+    } else {
+      btn.innerHTML=`<div class="choice-flag-wrap"><img class="choice-flag" src="https://flagcdn.com/w160/${c.code}.png" alt="${c.name}" loading="lazy"></div>`;
+    }
+    btn.addEventListener("click",()=>handleAnswer(c,btn));
+    grid.appendChild(btn);
+  });
+
+  document.getElementById("result-panel").style.display="none";
+}
+
+function updateLivesDisplay(){
+  const hearts="❤️".repeat(state.lives)+"🖤".repeat(MAX_LIVES-state.lives);
+  document.getElementById("lives-display").textContent=hearts;
+}
+
+// ============================================================
+//  HANDLE ANSWER
+// ============================================================
+function handleAnswer(chosen, btn){
+  if(state.answered) return;
+  state.answered=true;
+  const correct=chosen.code===state.current.code;
+
+  document.querySelectorAll(".choice-btn").forEach(b=>b.disabled=true);
+  document.querySelectorAll(".choice-btn").forEach((b,i)=>{
+    if(state.choices[i].code===state.current.code) b.classList.add("correct-highlight");
+  });
+  if(!correct) btn.classList.add("wrong");
+
+  const card=document.getElementById("quiz-card");
+  if(correct){
+    card.classList.add("bounce"); playCorrect(); showFeedback("⭐");
+    state.score++; state.streak++;
+    if(state.streak>(progress.streakMax||0)) progress.streakMax=state.streak;
+    if(!progress.answeredRight.includes(state.current.code)) progress.answeredRight.push(state.current.code);
+  } else {
+    card.classList.add("shake"); card.style.background="#FFF0F0";
+    playWrong();
+    if(state.gametype==="survival"){
+      state.lives--; state.misses++;
+      updateLivesDisplay();
+      showFeedback("💔");
+    } else {
+      showFeedback("💦");
+    }
+    state.streak=0;
+  }
+  document.getElementById("score-display").textContent=state.score;
+  showResultPanel(correct);
+
+  state.currentQ++;
+
+  // 終了判定
+  if(state.gametype==="survival" && state.lives<=0){
+    document.getElementById("btn-next").textContent="結果を見る 💔";
+    document.getElementById("btn-next").onclick=showSurvivalResult;
+  } else if(state.gametype==="challenge" && state.currentQ>=state.totalQ){
+    document.getElementById("btn-next").textContent="結果を見る！ 🏆";
+    document.getElementById("btn-next").onclick=showFinalScore;
+  } else {
+    document.getElementById("btn-next").textContent="つぎへ →";
+    document.getElementById("btn-next").onclick=nextQuestion;
+  }
+
+  if(correct && state.streak===10){ setTimeout(()=>{fireConfetti();playFanfare();},200); }
+  else if(correct && state.score%5===0 && state.score>0){ setTimeout(fireConfetti,200); }
+
+  if(!progress.first_quiz) progress.first_quiz=true;
+  saveProgress(progress);
+}
+
+function showResultPanel(correct){
+  const c=state.current;
+  document.getElementById("result-flag").src=`https://flagcdn.com/w160/${c.code}.png`;
+  const v=document.getElementById("result-verdict");
+  v.textContent=correct?"⭕ 正解！":"✖ ざんねん…";
+  v.className="result-verdict "+(correct?"correct-v":"wrong-v");
+  document.getElementById("result-country-name").textContent=c.name;
+  document.getElementById("result-country-kana").textContent=c.kana;
+  document.getElementById("info-grid").innerHTML=[
+    ["🌍 地域",REGIONS[c.region]?.label||c.region],
+    ["🏛 首都",c.capital],
+    ["👥 人口",c.pop],
+    ["🏭 主な産業",c.industry],
+  ].map(([l,v])=>`<div class="info-item"><div class="info-label">${l}</div><div class="info-val">${v}</div></div>`).join("");
+  document.getElementById("info-fact").innerHTML=`<div class="fact-label">💡 豆知識</div>${c.fact}`;
+  document.getElementById("result-panel").style.display="block";
+}
+
+function nextQuestion(){ loadQuestion(); }
+
+// ============================================================
+//  FINAL SCORE (10問 / 無限)
+// ============================================================
+function showFinalScore(){
+  const tot=state.totalQ, sc=state.score, pct=Math.round(sc/tot*100);
+  let rank,label,col;
+  if(pct===100){rank="🥇";label="パーフェクト！！";col="#FFD700";progress.perfect10=true;}
+  else if(pct>=80){rank="🥈";label="すごい！";col="#C0C0C0";}
+  else if(pct>=60){rank="🥉";label="よくできました！";col="#CD7F32";}
+  else if(pct>=40){rank="😊";label="もう少し！";col="#4ECDC4";}
+  else{rank="📚";label="もっと練習しよう！";col="#7F8C8D";}
+
+  const rSet=new Set(COUNTRIES.filter(c=>progress.answeredRight.includes(c.code)).map(c=>c.region));
+  if(Object.keys(REGIONS).every(r=>rSet.has(r))) progress.allRegions=true;
+  saveProgress(progress);
+
+  if(pct===100) setTimeout(()=>{fireConfetti();playFanfare();},300);
+
+  document.getElementById("score-rank-emoji").textContent=rank;
+  const rl=document.getElementById("score-rank-label"); rl.textContent=label; rl.style.color=col;
+  document.getElementById("score-big").textContent=`${sc} / ${tot}`;
+  document.getElementById("score-sub").textContent=`正解率 ${pct}%`;
+  document.getElementById("score-breakdown").innerHTML=`
+    <div class="breakdown-row c"><span>✅ 正解</span><span>${sc}問</span></div>
+    <div class="breakdown-row w"><span>❌ まちがい</span><span>${tot-sc}問</span></div>
+    <div class="breakdown-row"><span>⭐ 最高連続正解</span><span>${progress.streakMax}回</span></div>
+    <div class="breakdown-row"><span>🌍 おぼえた国</span><span>${progress.answeredRight.length}カ国 / ${COUNTRIES.length}カ国</span></div>`;
+  showScreen("screen-score");
+}
+
+// ============================================================
+//  SURVIVAL RESULT
+// ============================================================
+function showSurvivalResult(){
+  const sc=state.score;
+  playGameOver();
+
+  document.getElementById("survival-score-big").textContent=sc;
+  document.getElementById("survival-miss-text").textContent=`3回まちがえてしまいました`;
+
+  // TOP5判定
+  if(isTop5(sc)){
+    state.pendingSurvivalScore=sc;
+    document.getElementById("top5-banner").style.display="block";
+    document.getElementById("name-input").value="";
+  } else {
+    document.getElementById("top5-banner").style.display="none";
+    state.pendingSurvivalScore=null;
+  }
+
+  renderRankingList("survival-ranking-list", loadRanking());
+  showScreen("screen-survival");
+}
+
+// ============================================================
+//  COLLECTION
+// ============================================================
+function showCollection(){
+  const rightSet=new Set(progress.answeredRight||[]);
+  const rc=document.getElementById("region-cards");
+  rc.innerHTML="";
+  Object.entries(REGIONS).forEach(([key,r])=>{
+    const all=COUNTRIES.filter(c=>c.region===key);
+    const done=all.filter(c=>rightSet.has(c.code)).length;
+    const tot=all.length, earned=done===tot&&tot>0;
+    const pct=tot>0?Math.round(done/tot*100):0;
+    rc.innerHTML+=`<div class="region-card">
+      <div class="region-card-header">
+        <div><div class="region-title">${r.emoji} ${r.label}</div>
+        <div class="region-prog-text">${done} / ${tot}カ国 正解（${pct}%）</div></div>
+        <div class="region-badge ${earned?"earned":""}">🏅</div>
+      </div>
+      <div class="region-bar"><div class="region-bar-fill" style="width:${pct}%;background:${r.bar}"></div></div>
+    </div>`;
+  });
+
+  document.getElementById("special-badges").innerHTML=SPECIAL_BADGES.map(b=>{
+    const earned=b.cond(progress);
+    return `<div class="badge-item ${earned?"earned":""}"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.label}</div></div>`;
+  }).join("");
+
+  showScreen("screen-collection");
+}
+
+// ============================================================
+//  LOAD JSON
+// ============================================================
+fetch("countries.json")
+  .then(r=>r.json())
+  .then(data=>{
+    COUNTRIES=data;
+    renderHomeRanking();
+    showScreen("screen-home");
+  })
+  .catch(err=>{
+    document.querySelector("#screen-loading p").textContent="データの読み込みに失敗しました。再読み込みしてください。";
+    console.error(err);
+  });
+</script>
+</body>
+</html>
