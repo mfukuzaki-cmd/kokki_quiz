@@ -242,6 +242,8 @@
     .info-val { font-size: 13px; font-weight: 700; }
     .info-fact { background: linear-gradient(135deg, #FFF9E6, #FFF0CC); border-radius: 10px; padding: 11px 13px; font-size: 13px; line-height: 1.65; border-left: 4px solid var(--accent); }
     .fact-label { font-size: 10px; font-weight: 800; color: #B7950B; margin-bottom: 4px; }
+    .info-origin { background: linear-gradient(135deg, #EEF4FF, #E0EEFF); border-radius: 10px; padding: 11px 13px; font-size: 13px; line-height: 1.65; border-left: 4px solid #5B9BD5; margin-top: 8px; }
+    .origin-label { font-size: 10px; font-weight: 800; color: #2E6DA4; margin-bottom: 4px; }
     .btn-next {
       width: 100%; padding: 15px;
       background: linear-gradient(135deg, var(--secondary), #3DBDB4);
@@ -482,6 +484,7 @@
       </div>
       <div class="info-grid" id="info-grid"></div>
       <div class="info-fact" id="info-fact"></div>
+      <div class="info-origin" id="info-origin"></div>
       <button class="btn-next" id="btn-next" onclick="nextQuestion()">つぎへ →</button>
     </div>
   </div>
@@ -865,6 +868,9 @@ function showResultPanel(correct){
     ["🏭 主な産業",c.industry],
   ].map(([l,v])=>`<div class="info-item"><div class="info-label">${l}</div><div class="info-val">${v}</div></div>`).join("");
   document.getElementById("info-fact").innerHTML=`<div class="fact-label">💡 豆知識</div>${c.fact}`;
+  const originEl=document.getElementById("info-origin");
+  if(c.origin){ originEl.innerHTML=`<div class="origin-label">🚩 国旗の由来</div>${c.origin}`; originEl.style.display=""; }
+  else { originEl.style.display="none"; }
   document.getElementById("result-panel").style.display="block";
 }
 
